@@ -1,0 +1,54 @@
+name: semver-bump-action
+description: Compute the next semantic version tag from the latest git tag and commit-message bump hints.
+author: Faisal Memon
+
+inputs:
+  version-bump:
+    description: Explicit version bump to use instead of inferring from commit messages.
+    required: false
+    default: ""
+  default-bump:
+    description: Fallback bump to use when no explicit bump or commit-message hint is present.
+    required: false
+    default: patch
+  tag-prefix:
+    description: Prefix to apply to the generated tag.
+    required: false
+    default: v
+  commit-message:
+    description: Primary commit message to inspect for bump hints.
+    required: false
+    default: ""
+  commits-json:
+    description: JSON array of commits to inspect for bump hints.
+    required: false
+    default: ""
+
+outputs:
+  new-tag:
+    description: The computed next semantic version tag.
+    value: ${{ steps.bump.outputs.new-tag }}
+  previous-tag:
+    description: The latest existing semantic version tag, or the zero baseline when none exist.
+    value: ${{ steps.bump.outputs.previous-tag }}
+  version-bump-used:
+    description: The bump type that was ultimately applied.
+    value: ${{ steps.bump.outputs.version-bump-used }}
+
+runs:
+  using: composite
+  steps:
+    - name: Compute semantic version bump
+      id: bump
+      shell: bash
+      env:
+        INPUT_VERSION_BUMP: ${{ inputs.version-bump }}
+        INPUT_DEFAULT_BUMP: ${{ inputs.default-bump }}
+        INPUT_TAG_PREFIX: ${{ inputs.tag-prefix }}
+        INPUT_COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        INPUT_COMMITS_JSON: ${{ inputs.commits-json }}
+      run: "${{ github.action_path }}/bump_semver.sh"
+
+branding:
+  icon: tag
+  color: blue
