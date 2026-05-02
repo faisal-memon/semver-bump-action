@@ -23,6 +23,18 @@ inputs:
     description: JSON array of commits to inspect for bump hints.
     required: false
     default: ""
+  write-tag:
+    description: When true, create and push the computed tag to origin with retries on tag collisions.
+    required: false
+    default: "false"
+  max-push-retries:
+    description: Maximum tag push attempts when write-tag is true.
+    required: false
+    default: "5"
+  retry-sleep-seconds:
+    description: Seconds to sleep between push retries when write-tag is true.
+    required: false
+    default: "1"
 
 outputs:
   new-tag:
@@ -47,6 +59,9 @@ runs:
         INPUT_TAG_PREFIX: ${{ inputs.tag-prefix }}
         INPUT_COMMIT_MESSAGE: ${{ inputs.commit-message }}
         INPUT_COMMITS_JSON: ${{ inputs.commits-json }}
+        INPUT_WRITE_TAG: ${{ inputs.write-tag }}
+        INPUT_MAX_PUSH_RETRIES: ${{ inputs.max-push-retries }}
+        INPUT_RETRY_SLEEP_SECONDS: ${{ inputs.retry-sleep-seconds }}
       run: "${{ github.action_path }}/bump_semver.sh"
 
 branding:
