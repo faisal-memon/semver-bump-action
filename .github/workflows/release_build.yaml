@@ -30,7 +30,7 @@ jobs:
 
       - name: Bump and write version tag
         id: bump
-        uses: faisal-memon/semver-bump-action@v0.0.2
+        uses: faisal-memon/semver-bump-action@v0.0.3
         with:
           version-bump: ${{ github.event_name == 'workflow_dispatch' && inputs.version_bump || '' }}
           commit-message: ${{ github.event.head_commit.message || '' }}
