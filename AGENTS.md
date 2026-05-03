@@ -28,11 +28,6 @@ Enable with:
 
 - `write-tag: "true"`
 
-Optional controls:
-
-- `max-push-retries` (default: `5`)
-- `retry-sleep-seconds` (default: `1`)
-
 ### Retry flow
 
 When `write-tag` is enabled, each attempt does:
@@ -46,9 +41,9 @@ When `write-tag` is enabled, each attempt does:
 If push fails because the tag already exists remotely, the action:
 
 - removes the local tag for that failed attempt
-- sleeps for `retry-sleep-seconds`
+- sleeps briefly
 - re-fetches and recomputes from the new latest tag
-- retries until success or `max-push-retries` is reached
+- retries until success or max attempts are reached
 
 If retries are exhausted (or failure is not a tag-collision case), the action exits non-zero with the Git push error output.
 
