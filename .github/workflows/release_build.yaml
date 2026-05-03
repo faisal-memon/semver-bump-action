@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   release:
-    if: github.actor != 'dependabot[bot]'
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'faisal-memon/semver-bump-action@')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
