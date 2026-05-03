@@ -38,25 +38,25 @@ url := https://github.com/koalaman/shellcheck/releases/download/$(SHELLCHECK_VER
 .PHONY: install-shellcheck shellcheck lint
 
 install-shellcheck:
-	@echo "Installing ShellCheck $(SHELLCHECK_VERSION)..."
-	@rm -rf $(TOOLS_DIR)
-	@mkdir -p $(TOOLS_DIR)/bin $(TOOLS_DIR)/archive
-	@curl -fsSL "$(url)" -o "$(TOOLS_DIR)/archive/$(archive)"
-	@tar -xJf "$(TOOLS_DIR)/archive/$(archive)" -C "$(TOOLS_DIR)/archive"
-	@cp "$(TOOLS_DIR)/archive/shellcheck-$(SHELLCHECK_VERSION)/shellcheck" "$(SHELLCHECK_BIN)"
-	@chmod +x "$(SHELLCHECK_BIN)"
-	@"$(SHELLCHECK_BIN)" --version
-
-shellcheck:
 	@version="$$( "$(SHELLCHECK_BIN)" --version 2>/dev/null | awk '/^version:/ {print $$2}' )"; \
-	if [ "$$version" != "$(SHELLCHECK_VERSION:v%=%)" ]; then \
+	if [ "$$version" = "$(SHELLCHECK_VERSION:v%=%)" ]; then \
+		:; \
+	else \
 		if [ -n "$$version" ]; then \
 			echo "ShellCheck version $$version found; expected $(SHELLCHECK_VERSION). Reinstalling..."; \
 		else \
 			echo "ShellCheck not found; installing $(SHELLCHECK_VERSION)..."; \
 		fi; \
-		$(MAKE) install-shellcheck; \
+		rm -rf $(TOOLS_DIR); \
+		mkdir -p $(TOOLS_DIR)/bin $(TOOLS_DIR)/archive; \
+		curl -fsSL "$(url)" -o "$(TOOLS_DIR)/archive/$(archive)"; \
+		tar -xJf "$(TOOLS_DIR)/archive/$(archive)" -C "$(TOOLS_DIR)/archive"; \
+		cp "$(TOOLS_DIR)/archive/shellcheck-$(SHELLCHECK_VERSION)/shellcheck" "$(SHELLCHECK_BIN)"; \
+		chmod +x "$(SHELLCHECK_BIN)"; \
 	fi
+	@"$(SHELLCHECK_BIN)" --version
+
+shellcheck: install-shellcheck
 	@"$(SHELLCHECK_BIN)" bump_semver.sh
 
 lint: shellcheck
