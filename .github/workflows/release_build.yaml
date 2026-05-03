@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
       - AGENTS.md
+      - README.md
   workflow_dispatch:
     inputs:
       version_bump:
