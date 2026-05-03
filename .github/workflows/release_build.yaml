@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - AGENTS.md
   workflow_dispatch:
     inputs:
       version_bump:
