@@ -82,7 +82,7 @@ if [[ "${write_tag}" == "true" ]]; then
     git fetch --tags --force >/dev/null 2>&1 || true
 
     latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
-    latest_tag="${latest_tag#${tag_prefix}}"
+    latest_tag="${latest_tag#"${tag_prefix}"}"
     previous_tag="${tag_prefix}${latest_tag}"
     next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
     new_tag="${tag_prefix}${next_version}"
@@ -110,7 +110,7 @@ if [[ "${write_tag}" == "true" ]]; then
   done
 else
   latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
-  latest_tag="${latest_tag#${tag_prefix}}"
+  latest_tag="${latest_tag#"${tag_prefix}"}"
   previous_tag="${tag_prefix}${latest_tag}"
   next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
   new_tag="${tag_prefix}${next_version}"
