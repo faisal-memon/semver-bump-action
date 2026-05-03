@@ -2,13 +2,10 @@
 set -euo pipefail
 
 version_bump="${INPUT_VERSION_BUMP:-}"
-default_bump="${INPUT_DEFAULT_BUMP:-patch}"
 tag_prefix="${INPUT_TAG_PREFIX:-v}"
-commit_message="${INPUT_COMMIT_MESSAGE:-}"
-commits_json="${INPUT_COMMITS_JSON:-}"
 write_tag="${INPUT_WRITE_TAG:-false}"
-max_push_retries="${INPUT_MAX_PUSH_RETRIES:-5}"
-retry_sleep_seconds="${INPUT_RETRY_SLEEP_SECONDS:-1}"
+max_push_retries=5
+retry_sleep_seconds=1
 
 compute_version_bump() {
   if [[ -n "${version_bump}" ]]; then
@@ -16,11 +13,12 @@ compute_version_bump() {
     return
   fi
 
-  push_messages="${commit_message}"
+  push_messages=""
 
-  if [[ -n "${commits_json}" ]] && command -v jq >/dev/null 2>&1; then
-    extra_messages="$(printf '%s' "${commits_json}" | jq -r '.[].message // empty')"
-    push_messages="$(printf '%s\n%s' "${push_messages}" "${extra_messages}")"
+  if command -v jq >/dev/null 2>&1 && [[ -n "${GITHUB_EVENT_PATH:-}" ]] && [[ -f "${GITHUB_EVENT_PATH}" ]]; then
+    head_message="$(jq -r '.head_commit.message // empty' "${GITHUB_EVENT_PATH}")"
+    commit_messages="$(jq -r '.commits[]?.message // empty' "${GITHUB_EVENT_PATH}")"
+    push_messages="$(printf '%s\n%s' "${head_message}" "${commit_messages}")"
   fi
 
   case "${push_messages}" in
@@ -34,7 +32,7 @@ compute_version_bump() {
       printf '%s\n' "patch"
       ;;
     *)
-      printf '%s\n' "${default_bump}"
+      printf '%s\n' "patch"
       ;;
   esac
 }
