@@ -1,4 +1,4 @@
-# semver-bump-action
+# simple-semver
 
 A simple GitHub composite action to compute and optionally push semantic version tags.
 
@@ -61,7 +61,7 @@ jobs:
 
 ## What part of the version gets bumped?
 
-The version will always follow the `major.minor.patch` format. If the `version-bump` input is provided, then that part of the version is bumped. Setting `version-bump` is useful for `workflow_dispatch:` when you want to select what part of the version to bump. Otherwise, it will look for `major`, `minor`, or `patch` in the commit messages in the GitHub event payload.
+The version will always follow the `major.minor.patch` format. If the `version-bump` input is provided, then that part of the version is bumped. Setting `version-bump` is useful for `workflow_dispatch:` when you want to select what part of the version to bump. Otherwise, it will look for explicit markers in the GitHub event payload commit messages: `[major]`/`#major`, `[minor]`/`#minor`, or `[patch]`/`#patch`. If no marker is found, it defaults to `patch`.
 
 
 ## Notes
