@@ -59,12 +59,11 @@ jobs:
 
 ## Inputs
 
-- `version-bump`
-  Explicit bump to apply: `major`, `minor`, or `patch`
-- `tag-prefix`
-  Prefix for generated tags, default `v`
-- `write-tag`
-  When `true`, creates and pushes the computed tag to `origin`, retrying if the tag already exists remotely
+| Input | Default | Description |
+| --- | --- | --- |
+| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. When empty, bump is inferred from commit markers. |
+| `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
+| `write-tag` | `"false"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 
 ## Outputs
 
