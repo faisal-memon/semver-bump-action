@@ -1,6 +1,14 @@
 # semver-bump-action
 
-Reusable GitHub composite action that computes the next semantic version tag from:
+A simple GitHub composite action to compute and optionally push semantic version tags.
+
+## Why This Action
+
+- Small API surface: only `version-bump`, `tag-prefix`, and `write-tag`.
+- Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
+- Concurrency-aware tag writes: retries with refetch/recompute when a tag collision occurs.
+
+## Version Sources
 
 - the latest existing git tag
 - an explicit bump input
@@ -8,7 +16,41 @@ Reusable GitHub composite action that computes the next semantic version tag fro
 
 When no prior tags exist, the action falls back to `v0.0.0` (or `<tag-prefix>0.0.0`) before applying the selected bump.
 
-## What It Does
+## Quick Start (Tag + Release)
+
+```yaml
+name: Release Build
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Bump and write version tag
+        id: bump
+        uses: faisal-memon/simple-semver@v0.0.9
+        with:
+          write-tag: "true"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.bump.outputs.new-tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Behavior
 
 - Resolves bump type from `version-bump` input when provided.
 - Otherwise infers bump type from commit messages in the GitHub event payload.
@@ -35,7 +77,7 @@ When no prior tags exist, the action falls back to `v0.0.0` (or `<tag-prefix>0.0
 ```yaml
 - name: Bump version tag
   id: bump
-  uses: faisal-memon/semver-bump-action@v0.0.9
+  uses: faisal-memon/simple-semver@v0.0.9
   with:
     version-bump: ${{ github.event_name == 'workflow_dispatch' && inputs.version_bump || '' }}
     write-tag: "true"
@@ -46,12 +88,13 @@ When no prior tags exist, the action falls back to `v0.0.0` (or `<tag-prefix>0.0
 ```yaml
 - name: Compute next version only
   id: bump
-  uses: faisal-memon/semver-bump-action@v0.0.9
+  uses: faisal-memon/simple-semver@v0.0.9
   with:
     write-tag: "false"
 ```
 
 ## Notes
 
+- `write-tag: "true"` requires workflow permissions: `contents: write`.
 - Ensure `actions/checkout` uses `fetch-depth: 0` in workflows that depend on tags.
 - For repositories with concurrent release jobs, keep `write-tag: "true"` to use built-in retry-safe tag writes.

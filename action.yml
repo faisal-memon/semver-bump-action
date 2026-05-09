@@ -1,5 +1,5 @@
 name: semver-bump-action
-description: Compute the next semantic version tag from the latest git tag and commit-message bump hints.
+description: Simple semantic version bump action with optional retry-safe tag writes.
 author: Faisal Memon
 
 inputs:
