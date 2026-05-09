@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`semver-bump-action` is a reusable GitHub composite action that computes the next semantic version tag based on:
+`simple-semver` is a reusable GitHub composite action that computes the next semantic version tag based on:
 
 - the latest existing Git tag
 - an explicit bump input (`major`, `minor`, `patch`)

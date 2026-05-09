@@ -1,4 +1,4 @@
-name: semver-bump-action
+name: simple-semver
 description: Simple semantic version bump action with optional retry-safe tag writes.
 author: Faisal Memon
 

@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   release:
-    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'faisal-memon/semver-bump-action@')
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'faisal-memon/simple-semver@')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -34,7 +34,7 @@ jobs:
 
       - name: Bump and write version tag
         id: bump
-        uses: faisal-memon/semver-bump-action@v0.0.4
+        uses: faisal-memon/simple-semver@v0.0.4
         with:
           version-bump: ${{ github.event_name == 'workflow_dispatch' && inputs.version_bump || '' }}
           write-tag: "true"
