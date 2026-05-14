@@ -2,7 +2,7 @@
 
 A GitHub action that updates semantic version tags (`major`.`minor`.`patch`) based on the matching pull request label (`major`, `minor`, or `patch`). Defaults to `patch` if no label is specified.
 
-## Why This Action
+## Why This Action?
 
 - Easy to use: set the PR label to what you want to bump
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
@@ -47,7 +47,7 @@ jobs:
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `label_branch` | `""` | Optional `workflow_dispatch` input in this repo's `release_build.yaml` that scopes PR-label lookup to a base branch. If empty, default branch is used. |
+| `label_branch` | `""` | What branch to track. If empty, defaults to default branch, ie main |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
 | `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. Most useful for manual `workflow_dispatch` runs. |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
