@@ -43,7 +43,7 @@ resolve_version_bump_from_pr_labels() {
     target_branch="$(jq -r '.repository.default_branch // "main"' "${GITHUB_EVENT_PATH}")"
   fi
 
-  if ! pulls_json="$(curl -fsSL     -H "Authorization: Bearer ${github_token}"     -H "Accept: application/vnd.github+json"     -H "X-GitHub-Api-Version: 2022-11-28"     "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls")"; then
+  if ! pulls_json="$(curl -fsSL     -H "Authorization: Bearer ${github_token}"     -H "Accept: application/vnd.github+json"     "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls")"; then
     echo "Failed to query pull requests for commit ${GITHUB_SHA}." >&2
     return 2
   fi
