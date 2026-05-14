@@ -1,6 +1,6 @@
 # simple-semver
 
-A simple GitHub composite action to compute and optionally push semantic version tags.
+A GitHub action that updates semantic version tags (`major.minor.patch`) based on a label on the pull request.
 
 ## Why This Action
 
