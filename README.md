@@ -1,11 +1,10 @@
 # simple-semver
 
-A GitHub action that updates semantic version tags (`major.minor.patch`) based on the matching pull request label (`major`, `minor`, or `patch`), defaults to `patch` if no label is specified.
+A GitHub action that updates semantic version tags (`major`.`minor`.`patch`) based on the matching pull request label (`major`, `minor`, or `patch`). Defaults to `patch` if no label is specified.
 
 ## Why This Action
 
-- Easy to use: Set the PR label to what you want to bump
-- Small API surface: only `version-bump`, `tag-prefix`, and `write-tag`.
+- Easy to use: set the PR label to what you want to bump
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
 - Concurrency-aware tag writes: retries with refetch/recompute when a tag collision occurs.
 
@@ -32,8 +31,6 @@ jobs:
       - name: Bump and write version tag
         id: bump
         uses: faisal-memon/simple-semver@v0.0.9
-        with:
-          write-tag: "true"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -44,7 +41,7 @@ jobs:
 ```
 
 > [!NOTE]
-> `write-tag: "true"` requires workflow permissions: `contents: write`.
+> Requires workflow permissions: `contents: write` to be able to write the semantic version tag
 
 ## Inputs
 
