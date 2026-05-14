@@ -9,33 +9,7 @@ max_push_retries=5
 retry_sleep_seconds=1
 
 resolve_version_bump_from_pr_labels() {
-  if [[ -z "${github_token}" ]]; then
-    echo "github-token (or GITHUB_TOKEN) is required when version-bump is empty." >&2
-    return 2
-  fi
-
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "jq is required to resolve version bump from PR labels." >&2
-    return 2
-  fi
-
-  if ! command -v curl >/dev/null 2>&1; then
-    echo "curl is required to resolve version bump from PR labels." >&2
-    return 2
-  fi
-
-  if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
-    echo "GITHUB_EVENT_PATH is required to resolve version bump from PR labels." >&2
-    return 2
-  fi
-
-  if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
-    echo "GITHUB_REPOSITORY and GITHUB_SHA are required to resolve version bump from PR labels." >&2
-    return 2
-  fi
-
-  if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
-    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
+  if ! validate_label_resolution_prereqs; then
     return 2
   fi
 
@@ -78,6 +52,38 @@ resolve_version_bump_from_pr_labels() {
   fi
 
   return 1
+}
+
+validate_label_resolution_prereqs() {
+  if [[ -z "${github_token}" ]]; then
+    echo "github-token (or GITHUB_TOKEN) is required when version-bump is empty." >&2
+    return 1
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "jq is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "curl is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
+    echo "GITHUB_EVENT_PATH is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
+    echo "GITHUB_REPOSITORY and GITHUB_SHA are required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
+    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
 }
 
 compute_version_bump() {
