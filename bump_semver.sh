@@ -34,16 +34,17 @@ resolve_version_bump_from_pr_labels() {
     return 2
   fi
 
+  if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
+    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
+    return 2
+  fi
+
   local owner repo target_branch api_url pulls_json selected_pr_number labels label_matches
   owner="${GITHUB_REPOSITORY%%/*}"
   repo="${GITHUB_REPOSITORY#*/}"
   api_url="${GITHUB_API_URL:-https://api.github.com}"
 
   target_branch="${GITHUB_REF_NAME:-}"
-  if [[ -z "${target_branch}" ]]; then
-    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
-    return 2
-  fi
 
   if ! pulls_json="$(curl \
     -fsSL \
