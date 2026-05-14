@@ -4,7 +4,6 @@ set -euo pipefail
 version_bump="${INPUT_VERSION_BUMP:-}"
 tag_prefix="${INPUT_TAG_PREFIX:-v}"
 github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
-label_branch="${INPUT_LABEL_BRANCH:-}"
 write_tag="${INPUT_WRITE_TAG:-false}"
 max_push_retries=5
 retry_sleep_seconds=1
@@ -40,10 +39,7 @@ resolve_version_bump_from_pr_labels() {
   repo="${GITHUB_REPOSITORY#*/}"
   api_url="${GITHUB_API_URL:-https://api.github.com}"
 
-  target_branch="$(printf '%s' "${label_branch}" | xargs)"
-  if [[ -z "${target_branch}" ]]; then
-    target_branch="${GITHUB_REF_NAME:-}"
-  fi
+  target_branch="${GITHUB_REF_NAME:-}"
   if [[ -z "${target_branch}" ]]; then
     target_branch="$(jq -r '.repository.default_branch // "main"' "${GITHUB_EVENT_PATH}")"
   fi
