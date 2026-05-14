@@ -47,10 +47,10 @@ jobs:
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. Most useful for manual `workflow_dispatch` runs. |
-| `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
-| `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 | `label_branch` | `""` | Optional `workflow_dispatch` input in this repo's `release_build.yaml` that scopes PR-label lookup to a base branch. If empty, default branch is used. |
+| `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
+| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. Most useful for manual `workflow_dispatch` runs. |
+| `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 
 ## Outputs
 
