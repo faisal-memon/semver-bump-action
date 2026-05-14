@@ -67,34 +67,6 @@ resolve_version_bump_from_pr_labels() {
   return 1
 }
 
-resolve_version_bump_from_commit_hints() {
-  local push_messages head_message commit_messages
-  push_messages=""
-
-  if command -v jq >/dev/null 2>&1 && [[ -n "${GITHUB_EVENT_PATH:-}" ]] && [[ -f "${GITHUB_EVENT_PATH}" ]]; then
-    head_message="$(jq -r '.head_commit.message // empty' "${GITHUB_EVENT_PATH}")"
-    commit_messages="$(jq -r '.commits[]?.message // empty' "${GITHUB_EVENT_PATH}")"
-    push_messages="$(printf '%s\n%s' "${head_message}" "${commit_messages}")"
-  fi
-
-  case "${push_messages}" in
-    *"[major]"*|*"#major"*)
-      printf '%s\n' "major"
-      return 0
-      ;;
-    *"[minor]"*|*"#minor"*)
-      printf '%s\n' "minor"
-      return 0
-      ;;
-    *"[patch]"*|*"#patch"*)
-      printf '%s\n' "patch"
-      return 0
-      ;;
-  esac
-
-  return 1
-}
-
 compute_version_bump() {
   if [[ -n "${version_bump}" ]]; then
     printf '%s\n' "${version_bump}"
@@ -102,11 +74,6 @@ compute_version_bump() {
   fi
 
   if resolved_bump="$(resolve_version_bump_from_pr_labels)"; then
-    printf '%s\n' "${resolved_bump}"
-    return
-  fi
-
-  if resolved_bump="$(resolve_version_bump_from_commit_hints)"; then
     printf '%s\n' "${resolved_bump}"
     return
   fi
