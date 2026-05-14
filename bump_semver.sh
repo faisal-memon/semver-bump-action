@@ -4,13 +4,26 @@ set -euo pipefail
 version_bump="${INPUT_VERSION_BUMP:-}"
 tag_prefix="${INPUT_TAG_PREFIX:-v}"
 github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
+label_branch="${INPUT_LABEL_BRANCH:-}"
 write_tag="${INPUT_WRITE_TAG:-false}"
 max_push_retries=5
 retry_sleep_seconds=1
 
 resolve_version_bump_from_pr_labels() {
-  if ! validate_label_resolution_prereqs; then
-    return 2
+  if [[ -z "${github_token}" ]]; then
+    return 1
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
+    return 1
   fi
 
   local owner repo target_branch api_url pulls_json selected_pr_number labels label_matches
@@ -18,16 +31,16 @@ resolve_version_bump_from_pr_labels() {
   repo="${GITHUB_REPOSITORY#*/}"
   api_url="${GITHUB_API_URL:-https://api.github.com}"
 
-  target_branch="${GITHUB_REF_NAME:-}"
+  target_branch="$(printf '%s' "${label_branch}" | xargs)"
+  if [[ -z "${target_branch}" ]]; then
+    target_branch="${GITHUB_REF_NAME:-}"
+  fi
+  if [[ -z "${target_branch}" ]]; then
+    target_branch="$(jq -r '.repository.default_branch // "main"' "${GITHUB_EVENT_PATH}")"
+  fi
 
-  if ! pulls_json="$(curl \
-    -fsSL \
-    -H "Authorization: Bearer ${github_token}" \
-    -H "Accept: application/vnd.github+json" \
-    "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls"
-  )"; then
-    echo "Failed to query pull requests for commit ${GITHUB_SHA}." >&2
-    return 2
+  if ! pulls_json="$(curl -fsSL     -H "Authorization: Bearer ${github_token}"     -H "Accept: application/vnd.github+json"     -H "X-GitHub-Api-Version: 2022-11-28"     "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls")"; then
+    return 1
   fi
 
   selected_pr_number="$(printf '%s' "${pulls_json}" | jq -r --arg b "${target_branch}" '[.[] | select(.base.ref == $b)][0].number // empty')"
@@ -54,36 +67,32 @@ resolve_version_bump_from_pr_labels() {
   return 1
 }
 
-validate_label_resolution_prereqs() {
-  if [[ -z "${github_token}" ]]; then
-    echo "github-token (or GITHUB_TOKEN) is required when version-bump is empty." >&2
-    return 1
+resolve_version_bump_from_commit_hints() {
+  local push_messages head_message commit_messages
+  push_messages=""
+
+  if command -v jq >/dev/null 2>&1 && [[ -n "${GITHUB_EVENT_PATH:-}" ]] && [[ -f "${GITHUB_EVENT_PATH}" ]]; then
+    head_message="$(jq -r '.head_commit.message // empty' "${GITHUB_EVENT_PATH}")"
+    commit_messages="$(jq -r '.commits[]?.message // empty' "${GITHUB_EVENT_PATH}")"
+    push_messages="$(printf '%s\n%s' "${head_message}" "${commit_messages}")"
   fi
 
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "jq is required to resolve version bump from PR labels." >&2
-    return 1
-  fi
+  case "${push_messages}" in
+    *"[major]"*|*"#major"*)
+      printf '%s\n' "major"
+      return 0
+      ;;
+    *"[minor]"*|*"#minor"*)
+      printf '%s\n' "minor"
+      return 0
+      ;;
+    *"[patch]"*|*"#patch"*)
+      printf '%s\n' "patch"
+      return 0
+      ;;
+  esac
 
-  if ! command -v curl >/dev/null 2>&1; then
-    echo "curl is required to resolve version bump from PR labels." >&2
-    return 1
-  fi
-
-  if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
-    echo "GITHUB_EVENT_PATH is required to resolve version bump from PR labels." >&2
-    return 1
-  fi
-
-  if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
-    echo "GITHUB_REPOSITORY and GITHUB_SHA are required to resolve version bump from PR labels." >&2
-    return 1
-  fi
-
-  if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
-    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
-    return 1
-  fi
+  return 1
 }
 
 compute_version_bump() {
@@ -95,11 +104,11 @@ compute_version_bump() {
   if resolved_bump="$(resolve_version_bump_from_pr_labels)"; then
     printf '%s\n' "${resolved_bump}"
     return
-  else
-    status=$?
-    if [[ "${status}" -eq 2 ]]; then
-      exit 1
-    fi
+  fi
+
+  if resolved_bump="$(resolve_version_bump_from_commit_hints)"; then
+    printf '%s\n' "${resolved_bump}"
+    return
   fi
 
   printf '%s\n' "patch"
