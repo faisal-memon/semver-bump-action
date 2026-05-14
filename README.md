@@ -49,7 +49,7 @@ jobs:
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. When empty, bump is inferred from commit markers. |
+| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. When empty, action logic falls back to marker/default behavior. |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
 | `write-tag` | `"false"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 
@@ -63,6 +63,17 @@ jobs:
 
 The version will always follow the `major.minor.patch` format. If the `version-bump` input is provided, then that part of the version is bumped. Setting `version-bump` is useful for `workflow_dispatch:` when you want to select what part of the version to bump. Otherwise, it will look for explicit markers in the GitHub event payload commit messages: `[major]`/`#major`, `[minor]`/`#minor`, or `[patch]`/`#patch`. If no marker is found, it defaults to `patch`.
 
+
+## Label-Driven Release Workflow (Optional)
+
+If you use this repo's `release_build.yaml` pattern, version bump can be resolved from pull request labels:
+
+- supported labels: `major`, `minor`, `patch`
+- if none are present, defaults to `patch`
+- if multiple are present, workflow fails fast
+- optional `workflow_dispatch` input `label_branch` can scope label lookup to a specific base branch (otherwise uses repository default branch)
+
+This keeps release behavior simple and explicit while preserving manual override via `workflow_dispatch` `version_bump`.
 
 ## Notes
 

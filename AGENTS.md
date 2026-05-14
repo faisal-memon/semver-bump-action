@@ -60,6 +60,9 @@ Without this loop, two workflows running close together can both compute the sam
 
 ## Release Workflow Guardrails
 
+
+- Release workflow can optionally resolve bump type from PR labels (`major`, `minor`, `patch`) scoped to a target branch.
+- The workflow defaults to `patch` when no label is present, and fails when more than one bump label is present.
 - `.github/workflows/release_build.yaml` is the self-release workflow for this repo.
 - It intentionally uses this action itself (`uses: faisal-memon/simple-semver@...`) to dogfood behavior.
 - It skips release execution for self-version-bump churn commits by checking commit message content.
