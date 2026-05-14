@@ -3,16 +3,72 @@ set -euo pipefail
 
 version_bump="${INPUT_VERSION_BUMP:-}"
 tag_prefix="${INPUT_TAG_PREFIX:-v}"
+github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
+label_branch="${INPUT_LABEL_BRANCH:-}"
 write_tag="${INPUT_WRITE_TAG:-false}"
 max_push_retries=5
 retry_sleep_seconds=1
 
-compute_version_bump() {
-  if [[ -n "${version_bump}" ]]; then
-    printf '%s\n' "${version_bump}"
-    return
+resolve_version_bump_from_pr_labels() {
+  if [[ -z "${github_token}" ]]; then
+    return 1
   fi
 
+  if ! command -v jq >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
+    return 1
+  fi
+
+  local owner repo target_branch api_url pulls_json selected_pr_number labels label_matches
+  owner="${GITHUB_REPOSITORY%%/*}"
+  repo="${GITHUB_REPOSITORY#*/}"
+  api_url="${GITHUB_API_URL:-https://api.github.com}"
+
+  target_branch="$(printf '%s' "${label_branch}" | xargs)"
+  if [[ -z "${target_branch}" ]]; then
+    target_branch="${GITHUB_REF_NAME:-}"
+  fi
+  if [[ -z "${target_branch}" ]]; then
+    target_branch="$(jq -r '.repository.default_branch // "main"' "${GITHUB_EVENT_PATH}")"
+  fi
+
+  if ! pulls_json="$(curl -fsSL     -H "Authorization: Bearer ${github_token}"     -H "Accept: application/vnd.github+json"     -H "X-GitHub-Api-Version: 2022-11-28"     "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls")"; then
+    return 1
+  fi
+
+  selected_pr_number="$(printf '%s' "${pulls_json}" | jq -r --arg b "${target_branch}" '[.[] | select(.base.ref == $b)][0].number // empty')"
+  if [[ -z "${selected_pr_number}" ]]; then
+    return 1
+  fi
+
+  labels="$(printf '%s' "${pulls_json}" | jq -r --arg b "${target_branch}" '[.[] | select(.base.ref == $b)][0].labels[]?.name // empty')"
+  label_matches="$(printf '%s\n' "${labels}" | grep -E '^(major|minor|patch)$' || true)"
+
+  local count
+  count="$(printf '%s\n' "${label_matches}" | sed '/^$/d' | wc -l | tr -d ' ')"
+
+  if [[ "${count}" -gt 1 ]]; then
+    echo "Multiple version labels found on PR #${selected_pr_number}. Use only one of major/minor/patch." >&2
+    exit 1
+  fi
+
+  if [[ "${count}" -eq 1 ]]; then
+    printf '%s\n' "${label_matches}"
+    return 0
+  fi
+
+  return 1
+}
+
+resolve_version_bump_from_commit_hints() {
+  local push_messages head_message commit_messages
   push_messages=""
 
   if command -v jq >/dev/null 2>&1 && [[ -n "${GITHUB_EVENT_PATH:-}" ]] && [[ -f "${GITHUB_EVENT_PATH}" ]]; then
@@ -24,17 +80,38 @@ compute_version_bump() {
   case "${push_messages}" in
     *"[major]"*|*"#major"*)
       printf '%s\n' "major"
+      return 0
       ;;
     *"[minor]"*|*"#minor"*)
       printf '%s\n' "minor"
+      return 0
       ;;
     *"[patch]"*|*"#patch"*)
       printf '%s\n' "patch"
-      ;;
-    *)
-      printf '%s\n' "patch"
+      return 0
       ;;
   esac
+
+  return 1
+}
+
+compute_version_bump() {
+  if [[ -n "${version_bump}" ]]; then
+    printf '%s\n' "${version_bump}"
+    return
+  fi
+
+  if resolved_bump="$(resolve_version_bump_from_pr_labels)"; then
+    printf '%s\n' "${resolved_bump}"
+    return
+  fi
+
+  if resolved_bump="$(resolve_version_bump_from_commit_hints)"; then
+    printf '%s\n' "${resolved_bump}"
+    return
+  fi
+
+  printf '%s\n' "patch"
 }
 
 bump_from_previous() {

@@ -48,7 +48,9 @@ jobs:
 | Input | Default | Description |
 | --- | --- | --- |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
-| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. Most useful for manual `workflow_dispatch` runs. |
+| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels, then commit hints, then defaults to `patch`. |
+| `label-branch` | `""` | Optional branch used to select associated PR labels. Defaults to the triggering branch. |
+| `github-token` | `""` | Optional token used to query PR labels. If empty, action falls back to `GITHUB_TOKEN` env when available. |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 
 ## Outputs
@@ -61,19 +63,20 @@ jobs:
 
 The version always follows `major.minor.patch`.
 
-- In this repo's release workflow, bump type is resolved from PR labels: `major`, `minor`, or `patch`.
-- If no matching label is found, it defaults to `patch`.
-- For manual `workflow_dispatch` runs, `version-bump` can explicitly override bump type.
+- If `version-bump` is provided, it is used directly.
+- Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit.
+- If no matching label is found, commit hints are used when present: `[major]`, `[minor]`, `[patch]`, `#major`, `#minor`, `#patch`.
+- If neither labels nor hints resolve a bump, it defaults to `patch`.
 
 
 ## Label-Driven Release Workflow (Optional)
 
-If you use this repo's `release_build.yaml` pattern, version bump can be resolved from pull request labels:
+This action can resolve version bump from pull request labels:
 
 - supported labels: `major`, `minor`, `patch`
 - if none are present, defaults to `patch`
 - if multiple are present, workflow fails fast
-- branch used for label lookup is the branch that triggered the push (`github.ref_name`)
+- branch used for label lookup defaults to the triggering branch (or `label-branch` if set)
 
 This keeps release behavior simple and explicit while preserving manual override via `workflow_dispatch` `version_bump`.
 

@@ -4,13 +4,21 @@ author: Faisal Memon
 
 inputs:
   version-bump:
-    description: Explicit version bump to use instead of inferring from commit messages.
+    description: Explicit version bump override (`major`, `minor`, `patch`). When empty, resolves from PR labels, then commit hints, then defaults to patch.
     required: false
     default: ""
   tag-prefix:
     description: Prefix to apply to the generated tag.
     required: false
     default: v
+  github-token:
+    description: GitHub token used to resolve PR labels for bump selection.
+    required: false
+    default: ""
+  label-branch:
+    description: Optional branch name used to select which PR labels to inspect. Defaults to the triggering branch.
+    required: false
+    default: ""
   write-tag:
     description: When true, create and push the computed tag to origin with retries on tag collisions.
     required: false
@@ -36,6 +44,8 @@ runs:
       env:
         INPUT_VERSION_BUMP: ${{ inputs.version-bump }}
         INPUT_TAG_PREFIX: ${{ inputs.tag-prefix }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_LABEL_BRANCH: ${{ inputs.label-branch }}
         INPUT_WRITE_TAG: ${{ inputs.write-tag }}
       run: "${{ github.action_path }}/bump_semver.sh"
 
