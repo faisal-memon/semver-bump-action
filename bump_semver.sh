@@ -11,19 +11,23 @@ retry_sleep_seconds=1
 
 resolve_version_bump_from_pr_labels() {
   if [[ -z "${github_token}" ]]; then
-    return 1
+    echo "github-token (or GITHUB_TOKEN) is required when version-bump is empty." >&2
+    return 2
   fi
 
   if ! command -v jq >/dev/null 2>&1; then
-    return 1
+    echo "jq is required to resolve version bump from PR labels." >&2
+    return 2
   fi
 
   if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
-    return 1
+    echo "GITHUB_EVENT_PATH is required to resolve version bump from PR labels." >&2
+    return 2
   fi
 
   if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
-    return 1
+    echo "GITHUB_REPOSITORY and GITHUB_SHA are required to resolve version bump from PR labels." >&2
+    return 2
   fi
 
   local owner repo target_branch api_url pulls_json selected_pr_number labels label_matches
@@ -40,7 +44,8 @@ resolve_version_bump_from_pr_labels() {
   fi
 
   if ! pulls_json="$(curl -fsSL     -H "Authorization: Bearer ${github_token}"     -H "Accept: application/vnd.github+json"     -H "X-GitHub-Api-Version: 2022-11-28"     "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls")"; then
-    return 1
+    echo "Failed to query pull requests for commit ${GITHUB_SHA}." >&2
+    return 2
   fi
 
   selected_pr_number="$(printf '%s' "${pulls_json}" | jq -r --arg b "${target_branch}" '[.[] | select(.base.ref == $b)][0].number // empty')"
@@ -76,6 +81,11 @@ compute_version_bump() {
   if resolved_bump="$(resolve_version_bump_from_pr_labels)"; then
     printf '%s\n' "${resolved_bump}"
     return
+  else
+    status=$?
+    if [[ "${status}" -eq 2 ]]; then
+      exit 1
+    fi
   fi
 
   printf '%s\n' "patch"
