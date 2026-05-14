@@ -4,7 +4,7 @@ author: Faisal Memon
 
 inputs:
   version-bump:
-    description: Explicit version bump override (`major`, `minor`, `patch`). When empty, resolves from PR labels, then commit hints, then defaults to patch.
+    description: Explicit version bump override (`major`, `minor`, `patch`). When empty, resolves from PR labels and defaults to patch.
     required: false
     default: ""
   tag-prefix:

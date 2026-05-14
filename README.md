@@ -48,7 +48,7 @@ jobs:
 | Input | Default | Description |
 | --- | --- | --- |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
-| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels, then commit hints, then defaults to `patch`. |
+| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels and defaults to `patch`. |
 | `label-branch` | `""` | Optional branch used to select associated PR labels. Defaults to the triggering branch. |
 | `github-token` | `""` | Optional token used to query PR labels. If empty, action falls back to `GITHUB_TOKEN` env when available. |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
@@ -65,8 +65,7 @@ The version always follows `major.minor.patch`.
 
 - If `version-bump` is provided, it is used directly.
 - Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit.
-- If no matching label is found, commit hints are used when present: `[major]`, `[minor]`, `[patch]`, `#major`, `#minor`, `#patch`.
-- If neither labels nor hints resolve a bump, it defaults to `patch`.
+- If no matching label is found, it defaults to `patch`.
 
 
 ## Label-Driven Release Workflow (Optional)
