@@ -49,7 +49,6 @@ jobs:
 | --- | --- | --- |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
 | `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels and defaults to `patch`. |
-| `label-branch` | `""` | Optional branch used to select associated PR labels. Defaults to the triggering branch. |
 | `github-token` | `""` | Token used to query PR labels. Required when `version-bump` is empty (or provide `GITHUB_TOKEN` env). |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 
@@ -76,7 +75,7 @@ This action can resolve version bump from pull request labels:
 - supported labels: `major`, `minor`, `patch`
 - if none are present, defaults to `patch`
 - if multiple are present, workflow fails fast
-- branch used for label lookup defaults to the triggering branch (or `label-branch` if set)
+- branch used for label lookup is the triggering branch
 
 This keeps release behavior simple and explicit while preserving manual override via `workflow_dispatch` `version_bump`.
 
