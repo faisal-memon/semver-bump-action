@@ -18,10 +18,6 @@ on:
           - patch
           - minor
           - major
-      label_branch:
-        description: Branch whose PR labels should drive version bump (defaults to repository default branch)
-        required: false
-        default: ""
 
 permissions:
   contents: write
@@ -40,6 +36,7 @@ jobs:
 
       - name: Resolve version bump from PR labels
         id: resolve-bump
+        if: github.event_name == 'push'
         uses: actions/github-script@v7
         with:
           script: |
@@ -52,9 +49,7 @@ jobs:
               }
             );
 
-            const defaultBranch = context.payload.repository?.default_branch || "main";
-            const configuredBranch = `${{ inputs.label_branch || '' }}`.trim();
-            const targetBranch = configuredBranch || defaultBranch;
+            const targetBranch = context.ref.replace("refs/heads/", "");
 
             const matchingPulls = pulls.filter((pr) => pr.base?.ref === targetBranch);
             if (matchingPulls.length === 0) {

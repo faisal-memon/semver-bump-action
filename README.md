@@ -47,7 +47,6 @@ jobs:
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `label_branch` | `""` | What branch to track. If empty, defaults to default branch, ie main |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
 | `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. Most useful for manual `workflow_dispatch` runs. |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
@@ -74,7 +73,7 @@ If you use this repo's `release_build.yaml` pattern, version bump can be resolve
 - supported labels: `major`, `minor`, `patch`
 - if none are present, defaults to `patch`
 - if multiple are present, workflow fails fast
-- optional `workflow_dispatch` input `label_branch` can scope label lookup to a specific base branch (otherwise uses repository default branch)
+- branch used for label lookup is the branch that triggered the push (`github.ref_name`)
 
 This keeps release behavior simple and explicit while preserving manual override via `workflow_dispatch` `version_bump`.
 
