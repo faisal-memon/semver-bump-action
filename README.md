@@ -4,7 +4,7 @@ A GitHub action that updates semantic version tags (`major.minor.patch`) based o
 
 ## Why This Action
 
-- Easy to use: Set the PR label  to what you want to bump
+- Easy to use: Set the PR label to what you want to bump
 - Small API surface: only `version-bump`, `tag-prefix`, and `write-tag`.
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
 - Concurrency-aware tag writes: retries with refetch/recompute when a tag collision occurs.
