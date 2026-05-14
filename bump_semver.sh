@@ -41,7 +41,8 @@ resolve_version_bump_from_pr_labels() {
 
   target_branch="${GITHUB_REF_NAME:-}"
   if [[ -z "${target_branch}" ]]; then
-    target_branch="$(jq -r '.repository.default_branch // "main"' "${GITHUB_EVENT_PATH}")"
+    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
+    return 2
   fi
 
   if ! pulls_json="$(curl \
