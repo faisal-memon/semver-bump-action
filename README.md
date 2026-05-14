@@ -1,6 +1,6 @@
 # simple-semver
 
-A GitHub action that updates semantic version tags (`major.minor.patch`) based on the matching pull request label (`major`, `minor`, or `patch`).
+A GitHub action that updates semantic version tags (`major.minor.patch`) based on the matching pull request label (`major`, `minor`, or `patch`), defaults to `patch` if no label is specified.
 
 ## Why This Action
 
