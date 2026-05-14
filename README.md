@@ -4,6 +4,7 @@ A GitHub action that updates semantic version tags (`major.minor.patch`) based o
 
 ## Why This Action
 
+- Updates semantic version (`major.minor.patch`) based on the matching PR label (`major`, `minor`, or `patch`).
 - Small API surface: only `version-bump`, `tag-prefix`, and `write-tag`.
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
 - Concurrency-aware tag writes: retries with refetch/recompute when a tag collision occurs.
