@@ -20,6 +20,11 @@ resolve_version_bump_from_pr_labels() {
     return 2
   fi
 
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "curl is required to resolve version bump from PR labels." >&2
+    return 2
+  fi
+
   if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
     echo "GITHUB_EVENT_PATH is required to resolve version bump from PR labels." >&2
     return 2
@@ -43,7 +48,12 @@ resolve_version_bump_from_pr_labels() {
     target_branch="$(jq -r '.repository.default_branch // "main"' "${GITHUB_EVENT_PATH}")"
   fi
 
-  if ! pulls_json="$(curl -fsSL     -H "Authorization: Bearer ${github_token}"     -H "Accept: application/vnd.github+json"     "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls")"; then
+  if ! pulls_json="$(curl \
+    -fsSL \
+    -H "Authorization: Bearer ${github_token}" \
+    -H "Accept: application/vnd.github+json" \
+    "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls"
+  )"; then
     echo "Failed to query pull requests for commit ${GITHUB_SHA}." >&2
     return 2
   fi
