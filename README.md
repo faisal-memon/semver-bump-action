@@ -65,7 +65,7 @@ The version always follows `major.minor.patch`.
 - If `version-bump` is provided, it is used directly.
 - Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit.
 - If no matching label is found, it defaults to `patch`.
-- If label resolution prerequisites are missing (`github-token`/`GITHUB_TOKEN`, `jq`, or required GitHub context), the action fails fast.
+- If label resolution prerequisites are missing (`github-token`/`GITHUB_TOKEN`, `jq`, `curl`, `GITHUB_REF_NAME`, or required GitHub context), the action fails fast.
 
 
 ## Label-Driven Release Workflow (Optional)
