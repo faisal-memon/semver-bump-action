@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   release:
-    if: github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, 'faisal-memon/simple-semver@') && !contains(github.event.head_commit.message, 'Bump faisal-memon/simple-semver from'))
+    if: github.event_name == 'workflow_dispatch' || (!contains(github.event.head_commit.message, format('{0}@', github.repository)) && !contains(github.event.head_commit.message, format('Bump {0} from', github.repository)))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
