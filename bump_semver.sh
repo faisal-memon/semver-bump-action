@@ -5,6 +5,7 @@ version_bump="${INPUT_VERSION_BUMP:-}"
 tag_prefix="${INPUT_TAG_PREFIX:-v}"
 github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
 write_tag="${INPUT_WRITE_TAG:-false}"
+write_major_tag="${INPUT_WRITE_MAJOR_TAG:-false}"
 max_push_retries=5
 retry_sleep_seconds=1
 
@@ -174,6 +175,15 @@ if [[ "${write_tag}" == "true" ]]; then
     echo "${push_err}" >&2
     exit 1
   done
+
+  if [[ "${write_major_tag}" == "true" ]]; then
+    major_tag="${tag_prefix}${next_version%%.*}"
+    git tag -f "${major_tag}" >/dev/null 2>&1 || true
+    if ! git push -f origin "refs/tags/${major_tag}" >"${push_err_file}" 2>&1; then
+      cat "${push_err_file}" >&2
+      exit 1
+    fi
+  fi
 else
   latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
   latest_tag="${latest_tag#"${tag_prefix}"}"

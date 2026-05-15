@@ -30,7 +30,11 @@ jobs:
 
       - name: Bump and write version tag
         id: bump
-        uses: faisal-memon/simple-semver@v0.0.9
+        uses: faisal-memon/simple-semver@v0.0.15
+        with:
+          write-tag: "true"
+          write-major-tag: "true"
+          github-token: ${{ github.token }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -51,6 +55,7 @@ jobs:
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
 | `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels and defaults to `patch`. |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
+| `write-major-tag` | `"false"` | When `true` and `write-tag` is `true`, moves and pushes floating major tag (for example `v1` or `v0`). |
 
 ## Outputs
 
