@@ -3,9 +3,88 @@ set -euo pipefail
 
 version_bump="${INPUT_VERSION_BUMP:-}"
 tag_prefix="${INPUT_TAG_PREFIX:-v}"
+github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
 write_tag="${INPUT_WRITE_TAG:-false}"
 max_push_retries=5
 retry_sleep_seconds=1
+
+resolve_version_bump_from_pr_labels() {
+  if ! validate_label_resolution_prereqs; then
+    return 2
+  fi
+
+  local owner repo target_branch api_url pulls_json selected_pr_number labels label_matches
+  owner="${GITHUB_REPOSITORY%%/*}"
+  repo="${GITHUB_REPOSITORY#*/}"
+  api_url="${GITHUB_API_URL:-https://api.github.com}"
+
+  target_branch="${GITHUB_REF_NAME:-}"
+
+  if ! pulls_json="$(curl \
+    -fsSL \
+    -H "Authorization: Bearer ${github_token}" \
+    -H "Accept: application/vnd.github+json" \
+    "${api_url}/repos/${owner}/${repo}/commits/${GITHUB_SHA}/pulls"
+  )"; then
+    echo "Failed to query pull requests for commit ${GITHUB_SHA}." >&2
+    return 2
+  fi
+
+  selected_pr_number="$(printf '%s' "${pulls_json}" | jq -r --arg b "${target_branch}" '[.[] | select(.base.ref == $b)][0].number // empty')"
+  if [[ -z "${selected_pr_number}" ]]; then
+    return 1
+  fi
+
+  labels="$(printf '%s' "${pulls_json}" | jq -r --arg b "${target_branch}" '[.[] | select(.base.ref == $b)][0].labels[]?.name // empty')"
+  label_matches="$(printf '%s\n' "${labels}" | grep -E '^(major|minor|patch)$' || true)"
+
+  local count
+  count="$(printf '%s\n' "${label_matches}" | sed '/^$/d' | wc -l | tr -d ' ')"
+
+  if [[ "${count}" -gt 1 ]]; then
+    echo "Multiple version labels found on PR #${selected_pr_number}. Use only one of major/minor/patch." >&2
+    exit 1
+  fi
+
+  if [[ "${count}" -eq 1 ]]; then
+    printf '%s\n' "${label_matches}"
+    return 0
+  fi
+
+  return 1
+}
+
+validate_label_resolution_prereqs() {
+  if [[ -z "${github_token}" ]]; then
+    echo "github-token (or GITHUB_TOKEN) is required when version-bump is empty." >&2
+    return 1
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "jq is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "curl is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_EVENT_PATH:-}" ]] || [[ ! -f "${GITHUB_EVENT_PATH}" ]]; then
+    echo "GITHUB_EVENT_PATH is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_REPOSITORY:-}" ]] || [[ -z "${GITHUB_SHA:-}" ]]; then
+    echo "GITHUB_REPOSITORY and GITHUB_SHA are required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+
+  if [[ -z "${GITHUB_REF_NAME:-}" ]]; then
+    echo "GITHUB_REF_NAME is required to resolve version bump from PR labels." >&2
+    return 1
+  fi
+}
 
 compute_version_bump() {
   if [[ -n "${version_bump}" ]]; then
@@ -13,28 +92,17 @@ compute_version_bump() {
     return
   fi
 
-  push_messages=""
-
-  if command -v jq >/dev/null 2>&1 && [[ -n "${GITHUB_EVENT_PATH:-}" ]] && [[ -f "${GITHUB_EVENT_PATH}" ]]; then
-    head_message="$(jq -r '.head_commit.message // empty' "${GITHUB_EVENT_PATH}")"
-    commit_messages="$(jq -r '.commits[]?.message // empty' "${GITHUB_EVENT_PATH}")"
-    push_messages="$(printf '%s\n%s' "${head_message}" "${commit_messages}")"
+  if resolved_bump="$(resolve_version_bump_from_pr_labels)"; then
+    printf '%s\n' "${resolved_bump}"
+    return
+  else
+    status=$?
+    if [[ "${status}" -eq 2 ]]; then
+      exit 1
+    fi
   fi
 
-  case "${push_messages}" in
-    *"[major]"*|*"#major"*)
-      printf '%s\n' "major"
-      ;;
-    *"[minor]"*|*"#minor"*)
-      printf '%s\n' "minor"
-      ;;
-    *"[patch]"*|*"#patch"*)
-      printf '%s\n' "patch"
-      ;;
-    *)
-      printf '%s\n' "patch"
-      ;;
-  esac
+  printf '%s\n' "patch"
 }
 
 bump_from_previous() {

@@ -1,10 +1,10 @@
 # simple-semver
 
-A simple GitHub composite action to compute and optionally push semantic version tags.
+A GitHub action that updates semantic version tags (`major`.`minor`.`patch`) based on the matching pull request label (`major`, `minor`, or `patch`). Defaults to `patch` if no label is specified.
 
-## Why This Action
+## Why This Action?
 
-- Small API surface: only `version-bump`, `tag-prefix`, and `write-tag`.
+- Easy to use: set the PR label to what you want to bump
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
 - Concurrency-aware tag writes: retries with refetch/recompute when a tag collision occurs.
 
@@ -31,8 +31,6 @@ jobs:
       - name: Bump and write version tag
         id: bump
         uses: faisal-memon/simple-semver@v0.0.9
-        with:
-          write-tag: "true"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -43,15 +41,16 @@ jobs:
 ```
 
 > [!NOTE]
-> `write-tag: "true"` requires workflow permissions: `contents: write`.
+> Requires workflow permissions: `contents: write` to be able to write the semantic version tag
 
 ## Inputs
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `version-bump` | `""` | Explicit bump to apply: `major`, `minor`, or `patch`. When empty, bump is inferred from commit markers. |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
-| `write-tag` | `"false"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
+| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels and defaults to `patch`. |
+| `github-token` | `""` | Token used to query PR labels. Required when `version-bump` is empty (or provide `GITHUB_TOKEN` env). |
+| `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
 
 ## Outputs
 
@@ -61,8 +60,24 @@ jobs:
 
 ## What part of the version gets bumped?
 
-The version will always follow the `major.minor.patch` format. If the `version-bump` input is provided, then that part of the version is bumped. Setting `version-bump` is useful for `workflow_dispatch:` when you want to select what part of the version to bump. Otherwise, it will look for explicit markers in the GitHub event payload commit messages: `[major]`/`#major`, `[minor]`/`#minor`, or `[patch]`/`#patch`. If no marker is found, it defaults to `patch`.
+The version always follows `major.minor.patch`.
 
+- If `version-bump` is provided, it is used directly.
+- Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit.
+- If no matching label is found, it defaults to `patch`.
+- If label resolution prerequisites are missing (`github-token`/`GITHUB_TOKEN`, `jq`, `curl`, `GITHUB_REF_NAME`, or required GitHub context), the action fails fast.
+
+
+## Label-Driven Release Workflow (Optional)
+
+This action can resolve version bump from pull request labels:
+
+- supported labels: `major`, `minor`, `patch`
+- if none are present, defaults to `patch`
+- if multiple are present, workflow fails fast
+- branch used for label lookup is the triggering branch
+
+This keeps release behavior simple and explicit while preserving manual override via `workflow_dispatch` `version_bump`.
 
 ## Notes
 
