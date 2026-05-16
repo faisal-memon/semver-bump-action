@@ -37,6 +37,11 @@ url := https://github.com/koalaman/shellcheck/releases/download/$(SHELLCHECK_VER
 
 .PHONY: install-shellcheck shellcheck lint
 
+lint: shellcheck
+
+shellcheck: install-shellcheck
+	@"$(SHELLCHECK_BIN)" bump_semver.sh
+
 install-shellcheck:
 	@version="$$( "$(SHELLCHECK_BIN)" --version 2>/dev/null | awk '/^version:/ {print $$2}' )"; \
 	if [ "$$version" = "$(SHELLCHECK_VERSION:v%=%)" ]; then \
@@ -56,7 +61,3 @@ install-shellcheck:
 	fi
 	@"$(SHELLCHECK_BIN)" --version
 
-shellcheck: install-shellcheck
-	@"$(SHELLCHECK_BIN)" bump_semver.sh
-
-lint: shellcheck
