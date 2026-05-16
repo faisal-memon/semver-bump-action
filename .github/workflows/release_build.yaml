@@ -42,7 +42,7 @@ jobs:
         uses: faisal-memon/simple-semver@v0.0.14
         with:
           version-bump: ${{ github.event_name == 'workflow_dispatch' && inputs.version_bump || '' }}
-          write-tag: "true"
+          write-major-tag: "true"
           github-token: ${{ github.token }}
 
       - name: Create GitHub Release
