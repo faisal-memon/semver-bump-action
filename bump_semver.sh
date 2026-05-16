@@ -14,6 +14,7 @@ main() {
   git fetch --tags --force >/dev/null 2>&1 || true
   latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
   latest_tag="${latest_tag#"${tag_prefix}"}"
+  validate_latest_tag_format "${latest_tag}"
   previous_tag="${tag_prefix}${latest_tag}"
   next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
   new_tag="${tag_prefix}${next_version}"
@@ -191,6 +192,14 @@ bump_from_previous() {
   esac
 
   printf '%s\n' "${major}.${minor}.${patch}"
+}
+
+validate_latest_tag_format() {
+  local latest="$1"
+  if [[ ! "${latest}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "Latest tag must be semantic version format ${tag_prefix}X.Y.Z, but got ${tag_prefix}${latest}. Fix tags or set an explicit version-bump." >&2
+    exit 1
+  fi
 }
 
 main "$@"
