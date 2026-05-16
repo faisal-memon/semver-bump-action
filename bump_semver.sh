@@ -135,58 +135,62 @@ bump_from_previous() {
   printf '%s\n' "${major}.${minor}.${patch}"
 }
 
-version_bump="$(compute_version_bump)"
-previous_tag=""
-new_tag=""
+main() {
+  version_bump="$(compute_version_bump)"
+  previous_tag=""
+  new_tag=""
 
-if [[ "${write_tag}" == "true" ]]; then
-  push_err_file="$(mktemp)"
-  trap 'rm -f "${push_err_file}"' EXIT
+  if [[ "${write_tag}" == "true" ]]; then
+    push_err_file="$(mktemp)"
+    trap 'rm -f "${push_err_file}"' EXIT
 
-  git fetch --tags --force >/dev/null 2>&1 || true
+    git fetch --tags --force >/dev/null 2>&1 || true
 
-  latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
-  latest_tag="${latest_tag#"${tag_prefix}"}"
-  previous_tag="${tag_prefix}${latest_tag}"
-  next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
-  new_tag="${tag_prefix}${next_version}"
+    latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
+    latest_tag="${latest_tag#"${tag_prefix}"}"
+    previous_tag="${tag_prefix}${latest_tag}"
+    next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
+    new_tag="${tag_prefix}${next_version}"
 
-  if git rev-parse -q --verify "refs/tags/${new_tag}" >/dev/null 2>&1; then
-    git tag -d "${new_tag}" >/dev/null 2>&1 || true
-  fi
+    if git rev-parse -q --verify "refs/tags/${new_tag}" >/dev/null 2>&1; then
+      git tag -d "${new_tag}" >/dev/null 2>&1 || true
+    fi
 
-  git tag "${new_tag}"
+    git tag "${new_tag}"
 
-  if ! git push origin "refs/tags/${new_tag}" >"${push_err_file}" 2>&1; then
-    push_err="$(cat "${push_err_file}")"
-    git tag -d "${new_tag}" >/dev/null 2>&1 || true
-    if [[ "${push_err}" == *"already exists"* ]]; then
-      echo "Tag collision for ${new_tag}. Enable workflow concurrency (cancel-in-progress: false) and rerun." >&2
+    if ! git push origin "refs/tags/${new_tag}" >"${push_err_file}" 2>&1; then
+      push_err="$(cat "${push_err_file}")"
+      git tag -d "${new_tag}" >/dev/null 2>&1 || true
+      if [[ "${push_err}" == *"already exists"* ]]; then
+        echo "Tag collision for ${new_tag}. Enable workflow concurrency (cancel-in-progress: false) and rerun." >&2
+        echo "${push_err}" >&2
+        exit 1
+      fi
       echo "${push_err}" >&2
       exit 1
     fi
-    echo "${push_err}" >&2
-    exit 1
-  fi
 
-  if [[ "${write_major_tag}" == "true" ]]; then
-    major_tag="${tag_prefix}${next_version%%.*}"
-    git tag -f "${major_tag}" >/dev/null 2>&1 || true
-    if ! git push -f origin "refs/tags/${major_tag}" >"${push_err_file}" 2>&1; then
-      cat "${push_err_file}" >&2
-      exit 1
+    if [[ "${write_major_tag}" == "true" ]]; then
+      major_tag="${tag_prefix}${next_version%%.*}"
+      git tag -f "${major_tag}" >/dev/null 2>&1 || true
+      if ! git push -f origin "refs/tags/${major_tag}" >"${push_err_file}" 2>&1; then
+        cat "${push_err_file}" >&2
+        exit 1
+      fi
     fi
+  else
+    latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
+    latest_tag="${latest_tag#"${tag_prefix}"}"
+    previous_tag="${tag_prefix}${latest_tag}"
+    next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
+    new_tag="${tag_prefix}${next_version}"
   fi
-else
-  latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
-  latest_tag="${latest_tag#"${tag_prefix}"}"
-  previous_tag="${tag_prefix}${latest_tag}"
-  next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
-  new_tag="${tag_prefix}${next_version}"
-fi
 
-{
-  echo "new-tag=${new_tag}"
-  echo "previous-tag=${previous_tag}"
-  echo "version-bump-used=${version_bump}"
-} >> "${GITHUB_OUTPUT}"
+  {
+    echo "new-tag=${new_tag}"
+    echo "previous-tag=${previous_tag}"
+    echo "version-bump-used=${version_bump}"
+  } >> "${GITHUB_OUTPUT}"
+}
+
+main "$@"
