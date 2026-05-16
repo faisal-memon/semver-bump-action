@@ -7,10 +7,6 @@ github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
 write_tag="${INPUT_WRITE_TAG:-false}"
 write_major_tag="${INPUT_WRITE_MAJOR_TAG:-false}"
 
-log_info() {
-  echo "[simple-semver] $*"
-}
-
 main() {
   version_bump="$(compute_version_bump)"
   previous_tag=""
@@ -63,6 +59,10 @@ main() {
     echo "version-bump-used=${version_bump}"
   } >> "${GITHUB_OUTPUT}"
   log_info "Wrote outputs new-tag=${new_tag} previous-tag=${previous_tag} version-bump-used=${version_bump}"
+}
+
+log_info() {
+  echo "[simple-semver] $*"
 }
 
 resolve_version_bump_from_pr_labels() {
