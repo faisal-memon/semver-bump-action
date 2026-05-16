@@ -39,7 +39,7 @@ jobs:
 
       - name: Bump and write version tag
         id: bump
-        uses: faisal-memon/simple-semver@v0.0.14
+        uses: faisal-memon/simple-semver@v0.0.21
         with:
           version-bump: ${{ github.event_name == 'workflow_dispatch' && inputs.version_bump || '' }}
           write-major-tag: "true"
