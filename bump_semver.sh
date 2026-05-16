@@ -7,6 +7,10 @@ github_token="${INPUT_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
 write_tag="${INPUT_WRITE_TAG:-false}"
 write_major_tag="${INPUT_WRITE_MAJOR_TAG:-false}"
 
+log_info() {
+  echo "[simple-semver] $*"
+}
+
 main() {
   version_bump="$(compute_version_bump)"
   previous_tag=""
@@ -17,8 +21,10 @@ main() {
   previous_tag="${tag_prefix}${latest_tag}"
   next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
   new_tag="${tag_prefix}${next_version}"
+  log_info "Resolved bump=${version_bump} from previous=${previous_tag} to new=${new_tag}"
 
   if [[ "${write_tag}" == "true" ]]; then
+    log_info "write-tag=true; creating and pushing ${new_tag}"
     push_err_file="$(mktemp)"
     trap 'rm -f "${push_err_file}"' EXIT
 
@@ -42,12 +48,15 @@ main() {
 
     if [[ "${write_major_tag}" == "true" ]]; then
       major_tag="${tag_prefix}${next_version%%.*}"
+      log_info "write-major-tag=true; updating floating major tag ${major_tag}"
       git tag -f "${major_tag}" >/dev/null 2>&1 || true
       if ! git push -f origin "refs/tags/${major_tag}" >"${push_err_file}" 2>&1; then
         cat "${push_err_file}" >&2
         exit 1
       fi
     fi
+  else
+    log_info "write-tag=false; computed outputs only"
   fi
 
   {
@@ -55,6 +64,7 @@ main() {
     echo "previous-tag=${previous_tag}"
     echo "version-bump-used=${version_bump}"
   } >> "${GITHUB_OUTPUT}"
+  log_info "Wrote outputs new-tag=${new_tag} previous-tag=${previous_tag} version-bump-used=${version_bump}"
 }
 
 resolve_version_bump_from_pr_labels() {
