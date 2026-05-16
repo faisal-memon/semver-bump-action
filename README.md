@@ -6,7 +6,7 @@ A GitHub action that updates semantic version tags (`major`.`minor`.`patch`) bas
 
 - Easy to use: set the PR label to what you want to bump
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
-- Concurrency-aware tag writes: retries with refetch/recompute when a tag collision occurs.
+- Collision-safe behavior: fails on tag collision and instructs enabling workflow concurrency.
 
 ## Quick Start (Tag + Release)
 
@@ -54,7 +54,7 @@ jobs:
 | `github-token` | `""` | Token used to query PR labels. Required when `version-bump` is empty (or provide `GITHUB_TOKEN` env). |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
 | `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels and defaults to `patch`. |
-| `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin` with retry-safe collision handling. |
+| `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin`. If tag already exists, action fails and asks to enable workflow concurrency. |
 | `write-major-tag` | `"false"` | When `true` and `write-tag` is `true`, moves and pushes floating major tag (for example `v1` or `v0`). |
 
 ## Outputs
@@ -87,4 +87,4 @@ This keeps release behavior simple and explicit while preserving manual override
 ## Notes
 
 - Ensure `actions/checkout` uses `fetch-depth: 0` in workflows that depend on tags.
-- For repositories with concurrent release jobs, keep `write-tag: "true"` to use built-in retry-safe tag writes.
+- For repositories with concurrent release jobs, enable workflow `concurrency` with `cancel-in-progress: false` to avoid tag collisions.
