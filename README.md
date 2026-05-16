@@ -1,10 +1,10 @@
 # pr-label-semver
 
-Use pull request labels to updates semantic version tags.
+Use pull request labels to update semantic version tags.
 
 - Labels `major`, `minor`, or `patch` update corresponding part of semantic version
 - Defaults to `patch` if no label is specified
-- Automatic tracking of floating major tag to latest tag, ie `v1` -> `v1.2.3`
+- Automatic tracking of floating major tag to latest tag, i.e. `v1` -> `v1.2.3`
 
 ## Quick Start
 
@@ -57,7 +57,7 @@ jobs:
 | --- | --- | --- |
 | `github-token` | `""` | Token used to query PR labels. Required when `version-bump` is empty (or provide `GITHUB_TOKEN` env). |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
-| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. For workflow_dispatch: workflows. |
+| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. Useful for `workflow_dispatch` or manual override. |
 | `write-major-tag` | `"false"` | When `true` and `write-tag` is `true`, moves and pushes floating major tag (for example `v1` or `v0`). |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin`. If tag already exists, action fails and asks to enable workflow concurrency. |
 
@@ -69,9 +69,9 @@ jobs:
 
 ## How it works
 
-The version always follows `major`.`minor`.`patch` format. Each time this action is trigerred:
+The version always follows `major`.`minor`.`patch` format. Each time this action is triggered:
 
-- Fetches latest tag. If no tags exist, starts from `v0.0.0`
+- Fetches the latest semantic-version tag matching the prefix (`vX.Y.Z`). If none exist, starts from `v0.0.0`
 - If `version-bump` is provided, it is used directly
 - Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit
 - If no matching label is found, it defaults to `patch`
