@@ -55,8 +55,6 @@ main() {
         exit 1
       fi
     fi
-  else
-    log_info "write-tag=false; computed outputs only"
   fi
 
   {
