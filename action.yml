@@ -1,4 +1,4 @@
-name: simple-semver
+name: pr-label-semver
 description: Simple semantic version bump action with optional retry-safe tag writes.
 author: Faisal Memon
 
