@@ -57,7 +57,7 @@ jobs:
 | --- | --- | --- |
 | `github-token` | `""` | Token used to query PR labels. Required when `version-bump` is empty (or provide `GITHUB_TOKEN` env). |
 | `tag-prefix` | `v` | Prefix to apply to tags (for example `v1.2.3`). |
-| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. If empty, action resolves from PR labels and defaults to `patch`. |
+| `version-bump` | `""` | Explicit bump override: `major`, `minor`, or `patch`. For workflow_dispatch: workflows. |
 | `write-major-tag` | `"false"` | When `true` and `write-tag` is `true`, moves and pushes floating major tag (for example `v1` or `v0`). |
 | `write-tag` | `"true"` | When `true`, creates and pushes the computed tag to `origin`. If tag already exists, action fails and asks to enable workflow concurrency. |
 
@@ -67,9 +67,9 @@ jobs:
 - `previous-tag`: latest existing tag used as the bump source
 - `version-bump-used`: resolved bump type actually applied
 
-## What part of the version gets bumped?
+## How it works
 
-The version always follows `major.minor.patch`.
+The version always follows `major`.`minor`.`patch` format.
 
 - Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
 
