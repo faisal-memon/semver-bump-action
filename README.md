@@ -47,9 +47,9 @@ jobs:
 ```
 
 > [!NOTE]
-> Requires workflow permissions: `contents: write` to be able to write the semantic version tag
->
-> For `write-tag` workflows, configure workflow `concurrency` with `cancel-in-progress: false`.
+> - Ensure `actions/checkout` uses `fetch-depth: 0`
+> - Requires workflow permissions: `contents: write` to be able to write the semantic version tag
+> - Must configure workflow `concurrency` with `cancel-in-progress: false` to avoid tag collisions
 
 ## Inputs
 
@@ -69,29 +69,10 @@ jobs:
 
 ## How it works
 
-The version always follows `major`.`minor`.`patch` format.
+The version always follows `major`.`minor`.`patch` format. Each time this action is trigerred:
 
-- Safe baseline behavior: if no tags exist, starts from `v0.0.0`.
-
-
-- If `version-bump` is provided, it is used directly.
-- Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit.
-- If no matching label is found, it defaults to `patch`.
-- If label resolution prerequisites are missing (`github-token`/`GITHUB_TOKEN`, `jq`, `curl`, `GITHUB_REF_NAME`, or required GitHub context), the action fails fast.
-
-
-## Label-Driven Release Workflow (Optional)
-
-This action can resolve version bump from pull request labels:
-
-- supported labels: `major`, `minor`, `patch`
-- if none are present, defaults to `patch`
-- if multiple are present, workflow fails fast
-- branch used for label lookup is the triggering branch
-
-This keeps release behavior simple and explicit while preserving manual override via `workflow_dispatch` `version_bump`.
-
-## Notes
-
-- Ensure `actions/checkout` uses `fetch-depth: 0` in workflows that depend on tags.
-- For repositories with concurrent release jobs, enable workflow `concurrency` with `cancel-in-progress: false` to avoid tag collisions.
+- Fetches latest tag. If no tags exist, starts from `v0.0.0`
+- If `version-bump` is provided, it is used directly
+- Otherwise, the action checks labels (`major`, `minor`, `patch`) on the PR associated with the commit
+- If no matching label is found, it defaults to `patch`
+- Selected part of tag is bumped
