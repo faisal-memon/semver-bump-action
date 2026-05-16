@@ -11,18 +11,16 @@ main() {
   version_bump="$(compute_version_bump)"
   previous_tag=""
   new_tag=""
+  git fetch --tags --force >/dev/null 2>&1 || true
+  latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
+  latest_tag="${latest_tag#"${tag_prefix}"}"
+  previous_tag="${tag_prefix}${latest_tag}"
+  next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
+  new_tag="${tag_prefix}${next_version}"
 
   if [[ "${write_tag}" == "true" ]]; then
     push_err_file="$(mktemp)"
     trap 'rm -f "${push_err_file}"' EXIT
-
-    git fetch --tags --force >/dev/null 2>&1 || true
-
-    latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
-    latest_tag="${latest_tag#"${tag_prefix}"}"
-    previous_tag="${tag_prefix}${latest_tag}"
-    next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
-    new_tag="${tag_prefix}${next_version}"
 
     if git rev-parse -q --verify "refs/tags/${new_tag}" >/dev/null 2>&1; then
       git tag -d "${new_tag}" >/dev/null 2>&1 || true
@@ -50,12 +48,6 @@ main() {
         exit 1
       fi
     fi
-  else
-    latest_tag="$(git describe --tags --abbrev=0 2>/dev/null || echo "${tag_prefix}0.0.0")"
-    latest_tag="${latest_tag#"${tag_prefix}"}"
-    previous_tag="${tag_prefix}${latest_tag}"
-    next_version="$(bump_from_previous "${latest_tag}" "${version_bump}")"
-    new_tag="${tag_prefix}${next_version}"
   fi
 
   {
