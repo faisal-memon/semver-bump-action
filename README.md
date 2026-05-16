@@ -17,6 +17,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -46,6 +50,8 @@ jobs:
 
 > [!NOTE]
 > Requires workflow permissions: `contents: write` to be able to write the semantic version tag
+>
+> For `write-tag` workflows, configure workflow `concurrency` with `cancel-in-progress: false`.
 
 ## Inputs
 
